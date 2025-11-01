@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/
+
+  backend:
+    build: ../backend
+    env_file: ./.env
+    depends_on: [ db ]
+    command: [ "uvicorn", "app.main:app", "--host", "${BACKEND_HOST}", "--port", "${BACKEND_PORT}" ]
+    volumes:
+      - ../backend:/code
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+
+  frontend:
+    build: ../frontend
+    env_file: ./.env
+    depends_on: [ backend ]
+    volumes:
+      - ../frontend:/usr/src/app
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    command: [ "npm", "run", "dev" ]
+
+volumes:
+  pgdata:
